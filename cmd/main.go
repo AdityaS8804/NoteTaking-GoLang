@@ -159,6 +159,23 @@ func UpdateNote(id uint8, content string) error {
 	}
 	return errors.New("ID not found")
 }
+func DeleteFile(id uint8) error {
+	initial := viewMeta()
+	for _, val := range initial {
+		val2, err := strconv.Atoi(strings.Fields(val)[0])
+		if err != nil {
+			return err
+		}
+		if id == uint8(val2) {
+			os.Remove("./notes/" + strings.Fields(val)[1])
+			os.Remove("./notes/meta.txt")
+			createMeta()
+			return nil
+		}
+
+	}
+	return errors.New("ID not found")
+}
 func main() {
 	fmt.Println("Welcome to the best CLI note taking experience\nSelect an appropriate option")
 	createMeta()
@@ -183,13 +200,17 @@ func main() {
 			fmt.Println(content)
 		case 3:
 			var id uint8
-			fmt.Print("Enter note ID : \t")
+			fmt.Print("Enter note ID : ")
 			fmt.Scan(&id)
 			fmt.Println("Enter the content : ")
 			sc := bufio.NewScanner(os.Stdin)
 			ct := strings.Join(multilineReader(sc)[:], "\n")
 			UpdateNote(id, ct)
-
+		case 4:
+			var id uint8
+			fmt.Print("Enter note ID : ")
+			fmt.Scan(&id)
+			DeleteFile(id)
 		default:
 			os.Exit(1)
 		}
