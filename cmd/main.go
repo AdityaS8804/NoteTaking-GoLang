@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"strconv"
 	"strings"
@@ -134,9 +136,38 @@ func createMeta() {
 		io.WriteString(f, heading)
 	}
 }
+
+func UpdateNote(id uint8, content string) error {
+	initial := viewMeta()
+	for _, val := range initial {
+		val2, err := strconv.Atoi(strings.Fields(val)[0])
+		if err != nil {
+			return err
+		}
+		if uint8(val2) == id {
+			fileName := strings.Fields(val)[1]
+			fileContent, err := os.ReadFile("./notes/" + fileName)
+			if err != nil {
+				return err
+			}
+			fileContent2 := string(fileContent[:])
+			//fmt.Println(fileContent2)
+			os.WriteFile("./notes/"+fileName, []byte(fileContent2+"\n"+content), fs.FileMode(os.O_APPEND))
+
+			return nil
+		}
+	}
+	return errors.New("ID not found")
+}
 func main() {
 	fmt.Println("Welcome to the best CLI note taking experience\nSelect an appropriate option")
 	createMeta()
+	initial_content := viewMeta()
+	fmt.Println("ID\tTitle")
+	for _, text := range initial_content {
+		fmt.Println(text)
+	}
+	fmt.Println()
 	var choice uint8
 	for {
 		fmt.Printf("1 - Create new note\n2 - View a particular note\n3 - Update a note\n4 - Delete a note\n5 - Exit\nChoose : ")
@@ -150,6 +181,15 @@ func main() {
 			fmt.Scan(&id)
 			content := ViewNote(id)
 			fmt.Println(content)
+		case 3:
+			var id uint8
+			fmt.Print("Enter note ID : \t")
+			fmt.Scan(&id)
+			fmt.Println("Enter the content : ")
+			sc := bufio.NewScanner(os.Stdin)
+			ct := strings.Join(multilineReader(sc)[:], "\n")
+			UpdateNote(id, ct)
+
 		default:
 			os.Exit(1)
 		}
